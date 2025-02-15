@@ -1,2 +1,0 @@
-console.log(ethers);
-const { ethers } = require("hardhat");
