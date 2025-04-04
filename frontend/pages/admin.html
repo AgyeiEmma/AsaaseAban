@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Asaase Aban</title>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <header>
+        <h1>🔑 Admin Dashboard</h1>
+        <button id="logout">Logout</button>
+    </header>
+    
+    <main>
+        <section>
+            <h2>✅ Verify Land</h2>
+            <input type="number" id="verifyLandId" placeholder="Enter Land ID">
+            <button id="verifyLand">Verify Land</button>
+        </section>
+        
+        <section>
+            <h2>🔄 Transfer Ownership</h2>
+            <input type="number" id="transferLandId" placeholder="Land ID">
+            <input type="text" id="newOwner" placeholder="New Owner Address">
+            <button id="transferLand">Transfer</button>
+        </section>
+    </main>
+    
+    <script src="../js/web3.js"></script>
+    <script src="../js/script.js"></script>
+</body>
+</html>

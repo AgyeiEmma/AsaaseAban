@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asaase Aban - Land Registry</title>
+    
+    <!-- ✅ Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- ✅ Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <!-- ✅ Web3 & App Logic -->
+    <script type="module" src="js/web3.js"></script>
+    <script type="module" src="js/script.js"></script>
+
+    <style>
+        /* ✅ Fullscreen Map */
+        #map {
+            height: 500px;
+            width: 100%;
+            margin-top: 20px;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🌍 Asaase Aban - Blockchain Land Registry</h1>
+        <button id="connectWallet">Connect Wallet</button>
+        <p id="walletAddress">🔴 Wallet Not Connected</p>
+    </header>
+
+    <main>
+        <section>
+            <h2>🗺️ Registered Lands Map</h2>
+            <div id="map"></div> <!-- ✅ Map container -->
+        </section>
+    </main>
+
+    <footer>
+        <p>© 2025 Asaase Aban. All Rights Reserved.</p>
+    </footer>
+</body>
+<script type="module">
+    import { connectWallet } from "./js/web3.js";
+  
+    document.getElementById("connectWallet").addEventListener("click", async () => {
+      try {
+        const walletAddress = await connectWallet();
+        alert(`Wallet connected: ${walletAddress}`);
+        // Redirect to user.html with the wallet address as a query parameter
+        window.location.href = `/pages/user.html?wallet=${walletAddress}`;
+      } catch (error) {
+        console.error("❌ Error connecting wallet:", error);
+        alert("Failed to connect wallet. Please try again.");
+      }
+    });
+  </script>
+</html>

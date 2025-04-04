@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20; // ✅ Updated to match OpenZeppelin's latest version
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -7,9 +7,10 @@ contract LandRegistry is Ownable {
     struct LandParcel {
         uint256 id;
         address owner;
-        string location; // GPS Coordinates (latitude, longitude)
-        string documentHash; // IPFS Hash
-        bool verified; // Admin verifies land before transactions
+        string location;
+        string documentHash; // ✅ IPFS Hash
+        bool verified;
+        bool documentVerified; // ✅ New: Stores document verification status
         address[] ownershipHistory;
     }
 
@@ -20,49 +21,57 @@ contract LandRegistry is Ownable {
     event LandRegistered(uint256 indexed landId, address indexed owner, string location);
     event OwnershipTransferred(uint256 indexed landId, address indexed newOwner);
     event LandVerified(uint256 indexed landId, bool verified);
+    event DocumentVerified(uint256 indexed landId, bool verified); // ✅ New event
 
     modifier onlyVerifiedAuthority() {
-        require(verifiedAuthorities[msg.sender], "Not an authorized entity");
+        require(verifiedAuthorities[msg.sender], " Not an authorized entity");
         _;
     }
 
     modifier onlyLandOwner(uint256 landId) {
-        require(lands[landId].owner == msg.sender, "Not the landowner");
+        require(lands[landId].owner == msg.sender, " Not the landowner");
         _;
     }
 
-    constructor() Ownable(msg.sender) {
-        // The deployer of the contract is automatically the owner
-    }
+    constructor() Ownable(msg.sender) {}
 
     // ✅ Register new land
     function registerLand(string memory _location, string memory _documentHash) public {
         landCounter++;
 
-        // Create new land record
         LandParcel storage newLand = lands[landCounter];
         newLand.id = landCounter;
         newLand.owner = msg.sender;
         newLand.location = _location;
         newLand.documentHash = _documentHash;
         newLand.verified = false;
+        newLand.documentVerified = false; // ✅ Set document verification to false
 
-        // Push first owner into ownership history
         newLand.ownershipHistory.push(msg.sender);
 
         emit LandRegistered(landCounter, msg.sender, _location);
     }
 
-    // ✅ Verify land (Only admins)
+    // ✅ Verify land ownership (Admins Only)
     function verifyLand(uint256 _landId) public onlyVerifiedAuthority {
-        require(lands[_landId].id != 0, "Land does not exist");
+        require(lands[_landId].id != 0, " Land does not exist");
+        require(lands[_landId].documentVerified, " Document must be verified first");
+        
         lands[_landId].verified = true;
         emit LandVerified(_landId, true);
     }
 
-    // ✅ Transfer ownership (Buyer & Seller Agreement)
+    // ✅ Verify document (Admins Only)
+    function verifyDocument(uint256 _landId) public onlyVerifiedAuthority {
+        require(lands[_landId].id != 0, " Land does not exist");
+        
+        lands[_landId].documentVerified = true;
+        emit DocumentVerified(_landId, true);
+    }
+
+    // ✅ Transfer land ownership
     function transferLand(uint256 _landId, address _newOwner) public onlyLandOwner(_landId) {
-        require(lands[_landId].verified, "Land must be verified");
+        require(lands[_landId].verified, " Land must be verified");
         require(_newOwner != address(0), "Invalid new owner");
 
         lands[_landId].ownershipHistory.push(_newOwner);
@@ -77,11 +86,12 @@ contract LandRegistry is Ownable {
         string memory location,
         string memory documentHash,
         bool verified,
+        bool documentVerified, // ✅ New field
         address[] memory ownershipHistory
     ) {
-        require(lands[_landId].id != 0, "Land does not exist");
+        require(lands[_landId].id != 0, " Land does not exist");
         LandParcel storage land = lands[_landId];
-        return (land.owner, land.location, land.documentHash, land.verified, land.ownershipHistory);
+        return (land.owner, land.location, land.documentHash, land.verified, land.documentVerified, land.ownershipHistory);
     }
 
     // ✅ Add verified land authorities

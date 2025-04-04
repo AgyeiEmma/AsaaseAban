@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>User Dashboard | Asaase Aban</title>
+
+  <!-- ✅ Leaflet Styles and Scripts -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <!-- ✅ Custom Styles -->
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 1rem;
+      background: #f5f5f5;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    #map {
+      height: 400px;
+      width: 100%;
+      border: 2px solid #ccc;
+      margin-bottom: 2rem;
+    }
+
+    .card {
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      max-width: 600px;
+      margin-inline: auto;
+    }
+
+    .card h2 {
+      margin-top: 0;
+    }
+
+    label {
+      display: block;
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      padding: 0.5rem;
+      margin-top: 0.25rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    button {
+      margin-top: 1rem;
+      padding: 0.5rem;
+      width: 100%;
+      background: #28a745;
+      color: white;
+      font-weight: bold;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #218838;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 2rem;
+      font-size: 0.9rem;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🌍 Asaase Aban - User Dashboard</h1>
+    <p id="walletStatus">🟢 Connected as: <span id="userWallet">Loading...</span></p>
+  </header>
+
+  <!-- ✅ Leaflet Map -->
+  <div id="map"></div>
+  <!-- ✅ Register Land Section -->
+  <div class="card">
+    <h2>📌 Register New Land</h2>
+    <label for="location">GPS Coordinates:</label>
+    <input type="text" id="landLocation" placeholder="Latitude, Longitude" required />
+
+    <label for="documentHash">Document IPFS Hash:</label>
+    <input type="text" id="documentHash" placeholder="Enter Document Hash" required />
+
+    <button id="registerBtn">Register Land</button>
+  </div>
+
+  <!-- ✅ Check Land Existence Section -->
+  <div class="card">
+    <h2>🔍 Check Land Existence</h2>
+    <label for="checkLocation">Enter Coordinates:</label>
+    <input type="text" id="checkLocation" placeholder="Latitude, Longitude" />
+
+    <button id="checkBtn">Check Land</button>
+    <p id="checkResult"></p>
+  </div>
+
+  <footer>
+    <p>© 2025 Asaase Aban. All rights reserved.</p>
+  </footer>
+
+  <!-- ✅ App Logic (ensure these paths match your project) -->
+</body>
+  <script type="module">
+    // Get wallet address - try URL params first, then localStorage
+    const urlParams = new URLSearchParams(window.location.search);
+    const walletAddress = urlParams.get('wallet') || localStorage.getItem("walletAddress");
+    console.log("Wallet Address:", walletAddress);
+
+
+
+    if (walletAddress) {
+      // Display the wallet address on the page
+      document.getElementById("userWallet").textContent = walletAddress;
+      document.getElementById("walletStatus").textContent = `🟢 Connected as: ${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}`;
+      
+      // You can use this wallet address to fetch user data from your database
+      // fetchUserDataFromDatabase(walletAddress);
+      fetch(`/api/user-lands/${walletAddress}`)
+        .then((res) => {
+            if (!res.ok) throw new Error("Failed to fetch lands");
+            return res.json();
+            })
+            .then((lands) => {
+            console.log("🌍 User Lands:", lands);
+
+            // Optional: Display on map or UI (example logs to console)
+            lands.forEach((land) => {
+                const [lat, lng] = land.gps_coordinates.split(',').map(Number);
+                L.marker([lat, lng]).addTo(map)
+                .bindPopup(`<strong>Owner:</strong> ${land.blockchain_id}<br><strong>Hash:</strong> ${land.document_hash}`);
+            });
+            })
+            .catch((err) => {
+            console.error("❌ Error loading user lands:", err);
+            });
+
+}
+ else {
+      console.log("No wallet address found.");
+      alert("No wallet connected. Redirecting to the homepage.");
+      window.location.href = "../index.html";
+    }
+
+
+  </script>
+<script type="module">
+
+</script>
+</html>
