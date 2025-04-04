@@ -74,51 +74,107 @@ export function displayUserLands(walletAddress, map) {
             geometry: geojsonData
           };
           
-          // Generate a unique color for this land (cycle through colors)
-          const colors = ['#3388ff', '#ff4433', '#33ff44', '#ff33dd', '#ffaa33', '#33ffee'];
+          // Professional color scheme with good contrast
+          const colors = [
+            '#1E88E5', // Blue
+            '#D81B60', // Pink
+            '#FFC107', // Amber
+            '#004D40', // Teal
+            '#6D4C41', // Brown
+            '#5E35B1'  // Deep Purple
+          ];
           const color = colors[index % colors.length];
           
-          // Add the GeoJSON to map with styles
+          // Add the GeoJSON to map with enhanced styling
           const geoLayer = L.geoJSON(feature, {
             style: {
               fillColor: color,
-              weight: 2,
-              opacity: 1,
-              color: 'white',
-              dashArray: '3',
-              fillOpacity: 0.7
+              weight: 3,
+              opacity: 0.9,
+              color: '#FFFFFF',
+              dashArray: '5',
+              fillOpacity: 0.6
             },
             onEachFeature: (feature, layer) => {
-              // Add popup with land info
-              layer.bindPopup(`
-                <strong>Land #${feature.properties.id}</strong><br>
-                <strong>Grantor:</strong> ${feature.properties.grantor}<br>
-                <strong>Grantee:</strong> ${feature.properties.grantee}<br>
-                <strong>Acreage:</strong> ${feature.properties.acreage} acres<br>
-                <strong>Instrument:</strong> ${feature.properties.instrument}
-              `);
+              // Add enhanced popup with land info
+              const popupContent = `
+                <div class="land-popup">
+                  <h3>Land #${feature.properties.id}</h3>
+                  <table>
+                    <tr>
+                      <td><strong>Grantor:</strong></td>
+                      <td>${feature.properties.grantor}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Grantee:</strong></td>
+                      <td>${feature.properties.grantee}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Acreage:</strong></td>
+                      <td>${feature.properties.acreage} acres</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Instrument:</strong></td>
+                      <td>${feature.properties.instrument}</td>
+                    </tr>
+                  </table>
+                </div>
+              `;
               
-              // Highlight feature on hover
+              layer.bindPopup(popupContent, {
+                maxWidth: 300,
+                className: 'land-popup-container'
+              });
+              
+              // Add a tooltip showing the land ID for quick identification
+              layer.bindTooltip(`Land #${feature.properties.id}`, {
+                permanent: false,
+                direction: 'center',
+                className: 'land-tooltip'
+              });
+              
+              // Enhanced hover effects
               layer.on({
                 mouseover: (e) => {
                   const layer = e.target;
                   layer.setStyle({
                     weight: 5,
-                    color: '#666',
+                    color: '#333',
                     dashArray: '',
-                    fillOpacity: 0.9
+                    fillOpacity: 0.8
                   });
                   layer.bringToFront();
+                  layer.openTooltip();
                 },
                 mouseout: (e) => {
                   geoLayer.resetStyle(e.target);
+                  layer.closeTooltip();
                 },
                 click: () => {
-                  map.fitBounds(layer.getBounds());
+                  // Smooth zoom to the selected land
+                  map.fitBounds(layer.getBounds(), {
+                    padding: [50, 50],
+                    animate: true,
+                    duration: 0.5
+                  });
                 }
               });
             }
           }).addTo(map);
+          
+          // Add a centered label for each land parcel
+          geoLayer.eachLayer(layer => {
+            if (layer.getBounds) {
+              const center = layer.getBounds().getCenter();
+              const label = L.divIcon({
+                className: 'land-label',
+                html: `<span>${land.land_id}</span>`,
+                iconSize: [40, 20],
+                iconAnchor: [20, 10]
+              });
+              L.marker(center, { icon: label, zIndexOffset: 1000 }).addTo(map);
+            }
+          });
           
           // Store reference to this layer
           window.userLandLayers = window.userLandLayers || [];

@@ -5,245 +5,467 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>User Dashboard | Asaase Aban</title>
 
-  <!-- ✅ Leaflet Styles and Scripts -->
+  <!-- Leaflet Styles and Scripts -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
-  <!-- ✅ Custom Styles -->
+  
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  
+  <!-- Custom Styles -->
   <style>
-    body {
-      font-family: Arial, sans-serif;
+    :root {
+      --primary-color: #2c3e50;
+      --accent-color: #27ae60;
+      --accent-hover: #219653;
+      --light-bg: #f8f9fa;
+      --dark-text: #2d3436;
+      --mid-gray: #636e72;
+      --light-border: #dfe6e9;
+      --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --header-height: 64px;
+    }
+    
+    * {
+      box-sizing: border-box;
       margin: 0;
-      padding: 1rem;
-      background: #f5f5f5;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+      color: var(--dark-text);
+      background: var(--light-bg);
+      margin: 0;
+      padding: 0;
+      line-height: 1.6;
     }
 
-    header {
-      text-align: center;
-      margin-bottom: 1rem;
+    /* Top Navigation Bar */
+    .navbar {
+      background: var(--primary-color);
+      color: white;
+      display: flex;
+      align-items: center;
+      padding: 0 1.5rem;
+      height: var(--header-height);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+    
+    .navbar-logo {
+      font-size: 1.25rem;
+      font-weight: bold;
+      text-decoration: none;
+      color: white;
+      display: flex;
+      align-items: center;
+    }
+    
+    .navbar-logo i {
+      margin-right: 0.5rem;
+      font-size: 1.5rem;
+    }
+    
+    .navbar-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+    }
+    
+    .wallet-pill {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 0.5rem 1rem;
+      border-radius: 50px;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+    }
+    
+    .wallet-pill .status-dot {
+      width: 8px;
+      height: 8px;
+      background: #2ecc71;
+      border-radius: 50%;
+      margin-right: 8px;
     }
 
+    /* Main Container */
+    .main-container {
+      display: grid;
+      grid-template-columns: minmax(250px, 25%) 1fr;
+      gap: 1.5rem;
+      max-width: 1400px;
+      margin: 1.5rem auto;
+      padding: 0 1.5rem;
+    }
+    
+    /* Sidebar */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    
+    /* Map Section */
+    .map-container {
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: var(--card-shadow);
+    }
+    
     #map {
-      height: 400px;
+      height: calc(100vh - var(--header-height) - 3rem);
       width: 100%;
-      border: 2px solid #ccc;
-      margin-bottom: 2rem;
     }
-
+    
+    .map-overlay {
+      position: absolute;
+      top: 80px;
+      right: 20px;
+      background: white;
+      padding: 10px;
+      border-radius: 4px;
+      box-shadow: var(--card-shadow);
+      z-index: 400;
+    }
+    
+    /* Cards */
     .card {
       background: white;
-      padding: 1rem;
       border-radius: 8px;
-      margin-bottom: 1.5rem;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      max-width: 600px;
-      margin-inline: auto;
+      padding: 1.5rem;
+      box-shadow: var(--card-shadow);
     }
-
-    .card h2 {
-      margin-top: 0;
+    
+    .card-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--light-border);
     }
-
+    
+    .card-header i {
+      color: var(--accent-color);
+      margin-right: 0.75rem;
+      font-size: 1.25rem;
+    }
+    
+    .card-header h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin: 0;
+    }
+    
+    /* Form Elements */
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    
     label {
       display: block;
-      margin-top: 1rem;
-      font-weight: bold;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      color: var(--mid-gray);
     }
-
+    
     input {
       width: 100%;
-      padding: 0.5rem;
-      margin-top: 0.25rem;
-      border: 1px solid #ccc;
+      padding: 0.75rem;
+      border: 1px solid var(--light-border);
       border-radius: 4px;
+      font-size: 0.9rem;
     }
-
+    
+    input:focus {
+      outline: none;
+      border-color: var(--accent-color);
+    }
+    
     button {
-      margin-top: 1rem;
-      padding: 0.5rem;
-      width: 100%;
-      background: #28a745;
+      background: var(--accent-color);
       color: white;
-      font-weight: bold;
       border: none;
+      padding: 0.75rem 1rem;
+      font-weight: 500;
       border-radius: 4px;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
     }
-
+    
+    button i {
+      margin-right: 0.5rem;
+    }
+    
     button:hover {
-      background: #218838;
+      background: var(--accent-hover);
     }
-
-    footer {
-      text-align: center;
-      margin-top: 2rem;
-      font-size: 0.9rem;
-      color: #666;
-    }
-
-    /* Add these styles to your existing <style> section */
+    
+    /* Land List */
     #myLandsList {
       margin-top: 1rem;
+      max-height: 300px;
+      overflow-y: auto;
+      padding-right: 0.5rem;
     }
     
     .land-item {
-      background: #f9f9f9;
+      background: #f8f9fa;
       border-radius: 6px;
-      padding: 12px;
-      margin-bottom: 10px;
-      border-left: 4px solid #3498db;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+      border-left: 4px solid var(--accent-color);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .land-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
     
     .land-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      margin-bottom: 0.5rem;
     }
     
     .land-header h3 {
       margin: 0;
-      font-size: 1.1rem;
+      font-size: 1rem;
+      font-weight: 600;
     }
     
     .land-status {
-      font-weight: bold;
-      padding: 3px 8px;
-      border-radius: 12px;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 50px;
+      background: #e9f7ef;
+      color: #27ae60;
+      font-weight: 500;
     }
     
-    .land-status.verified {
-      background: #d4edda;
-      color: #155724;
-    }
-    
-    .land-status.pending {
-      background: #fff3cd;
-      color: #856404;
-    }
-    
-    .land-coords {
-      margin: 8px 0;
-      font-size: 0.9rem;
-      color: #666;
+    .land-details {
+      font-size: 0.85rem;
+      color: var(--mid-gray);
+      margin-bottom: 0.75rem;
     }
     
     .view-land-btn {
-      background: #3498db;
-      color: white;
-      font-size: 0.9rem;
-      padding: 5px 10px;
+      font-size: 0.85rem;
+      padding: 0.5rem 0.75rem;
+      width: 100%;
+    }
+    
+    /* Tooltips & Popups */
+    .land-tooltip {
+      background: rgba(0, 0, 0, 0.8);
       border: none;
-      border-radius: 4px;
-      cursor: pointer;
+      border-radius: 3px;
+      color: white;
+      font-weight: 500;
+      padding: 5px 10px;
     }
     
-    .view-land-btn:hover {
-      background: #2980b9;
+    .land-popup {
+      padding: 0.5rem;
     }
     
-    .no-lands {
-      color: #666;
-      font-style: italic;
+    .land-popup h3 {
+      margin: 0 0 0.75rem 0;
+      color: var(--dark-text);
+      text-align: center;
+      border-bottom: 1px solid var(--light-border);
+      padding-bottom: 0.5rem;
     }
     
-    .error-message {
-      color: #721c24;
-      background: #f8d7da;
-      padding: 8px;
-      border-radius: 4px;
+    .land-popup table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    .land-popup td {
+      padding: 0.25rem 0;
+      font-size: 0.85rem;
+    }
+    
+    /* Map Markers */
+    .land-label {
+      background: transparent;
+      border: none;
+    }
+    
+    .land-label span {
+      background-color: rgba(255, 255, 255, 0.9);
+      border: 2px solid var(--accent-color);
+      border-radius: 50%;
+      color: var(--dark-text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      width: 28px;
+      height: 28px;
+      font-size: 12px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .main-container {
+        grid-template-columns: 1fr;
+      }
+      
+      #map {
+        height: 50vh;
+      }
+      
+      .navbar {
+        padding: 0 1rem;
+      }
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>🌍 Asaase Aban - User Dashboard</h1>
-    <p id="walletStatus">🟢 Connected as: <span id="userWallet">Loading...</span></p>
-  </header>
+  <!-- Top Navigation Bar -->
+  <nav class="navbar">
+    <a href="#" class="navbar-logo">
+      <i class="fas fa-globe-africa"></i>
+      Asaase Aban
+    </a>
+    <div class="navbar-right">
+      <div class="wallet-pill">
+        <div class="status-dot"></div>
+        <span id="userWallet">Loading wallet...</span>
+      </div>
+    </div>
+  </nav>
 
-  <!-- ✅ Leaflet Map -->
-  <div id="map"></div>
-  <!-- ✅ Register Land Section -->
-  <div class="card">
-    <h2>📌 Register New Land</h2>
-    <label for="location">GPS Coordinates:</label>
-    <input type="text" id="landLocation" placeholder="Latitude, Longitude" required />
-
-    <label for="documentHash">Document IPFS Hash:</label>
-    <input type="text" id="documentHash" placeholder="Enter Document Hash" required />
-
-    <button id="registerBtn">Register Land</button>
-  </div>
-
-  <!-- ✅ Check Land Existence Section -->
-  <div class="card">
-    <h2>🔍 Check Land Existence</h2>
-    <label for="checkLocation">Enter Coordinates:</label>
-    <input type="text" id="checkLocation" placeholder="Latitude, Longitude" />
-
-    <button id="checkBtn">Check Land</button>
-    <p id="checkResult"></p>
-  </div>
-
-  <!-- Add this after the "Check Land Existence" card -->
-  <div class="card">
-    <h2>🏞️ My Registered Lands</h2>
-    <div id="myLandsContainer">
-      <p id="loadingLands">Loading your lands...</p>
-      <div id="myLandsList"></div>
+  <!-- Main Content -->
+  <div class="main-container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <!-- Register Land Card -->
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-plus-circle"></i>
+          <h2>Register New Land</h2>
+        </div>
+        <div class="form-group">
+          <label for="landLocation">GPS Coordinates</label>
+          <input type="text" id="landLocation" placeholder="Latitude, Longitude" />
+        </div>
+        <div class="form-group">
+          <label for="documentHash">Document IPFS Hash</label>
+          <input type="text" id="documentHash" placeholder="Enter Document Hash" />
+        </div>
+        <button id="registerBtn">
+          <i class="fas fa-file-signature"></i>
+          Register Land
+        </button>
+      </div>
+      
+      <!-- Check Land Card -->
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-search-location"></i>
+          <h2>Check Land Status</h2>
+        </div>
+        <div class="form-group">
+          <label for="checkLocation">Enter Coordinates</label>
+          <input type="text" id="checkLocation" placeholder="Latitude, Longitude" />
+        </div>
+        <button id="checkBtn">
+          <i class="fas fa-check-circle"></i>
+          Check Status
+        </button>
+        <p id="checkResult" style="margin-top: 1rem; font-size: 0.9rem;"></p>
+      </div>
+      
+      <!-- My Lands Card -->
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-layer-group"></i>
+          <h2>My Lands</h2>
+        </div>
+        <div id="myLandsContainer">
+          <p id="loadingLands" style="color: var(--mid-gray); font-size: 0.9rem;">Loading your lands...</p>
+          <div id="myLandsList"></div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Map Container -->
+    <div class="map-container">
+      <div id="map"></div>
     </div>
   </div>
-
-  <footer>
-    <p>© 2025 Asaase Aban. All rights reserved.</p>
-  </footer>
-
-  <!-- ✅ App Logic (ensure these paths match your project) -->
-</body>
-<script type="module">
-  import { displayUserLands } from "../js/userLands.js";
   
-  // Get wallet address - try URL params first, then localStorage
-  const urlParams = new URLSearchParams(window.location.search);
-  const walletAddress = urlParams.get('wallet') || localStorage.getItem("walletAddress");
-  console.log("Wallet Address:", walletAddress);
-
-  // Initialize map
-  const map = L.map('map').setView([5.6037, -0.1870], 10);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-  }).addTo(map);
-
-  if (walletAddress) {
-    // Display the wallet address on the page
-    document.getElementById("userWallet").textContent = walletAddress;
-    document.getElementById("walletStatus").textContent = `🟢 Connected as: ${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}`;
+  <!-- Script -->
+  <script type="module">
+    import { displayUserLands } from "../js/userLands.js";
     
-    // Display user lands on the map
-    displayUserLands(walletAddress, map);
-    
-    // Setup the register button
-    document.getElementById("registerBtn").addEventListener("click", async () => {
-      const location = document.getElementById("landLocation").value;
-      const documentHash = document.getElementById("documentHash").value;
+    // Get wallet address - try URL params first, then localStorage
+    const urlParams = new URLSearchParams(window.location.search);
+    const walletAddress = urlParams.get('wallet') || localStorage.getItem("walletAddress");
+    console.log("Wallet Address:", walletAddress);
+  
+    // Initialize map with appropriate starting position for Ghana
+    const map = L.map('map').setView([5.6037, -0.1870], 10);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+  
+    if (walletAddress) {
+      // Display the wallet address on the page (truncated for better UI)
+      document.getElementById("userWallet").textContent = 
+        `${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}`;
       
-      if (!location || !documentHash) {
-        alert("Please fill in all required fields");
-        return;
-      }
+      // Display user lands on the map
+      displayUserLands(walletAddress, map);
       
-      try {
-        // Implement your registration logic here
-        // After successful registration, refresh the lands display
-        displayUserLands(walletAddress, map);
-      } catch (error) {
-        console.error("Error registering land:", error);
-      }
-    });
-  } else {
-    console.log("No wallet address found.");
-    alert("No wallet connected. Redirecting to the homepage.");
-    window.location.href = "../index.html";
-  }
-</script>
+      // Setup the register button
+      document.getElementById("registerBtn").addEventListener("click", async () => {
+        const location = document.getElementById("landLocation").value;
+        const documentHash = document.getElementById("documentHash").value;
+        
+        if (!location || !documentHash) {
+          alert("Please fill in all required fields");
+          return;
+        }
+        
+        try {
+          // Implement your registration logic here
+          // After successful registration, refresh the lands display
+          displayUserLands(walletAddress, map);
+        } catch (error) {
+          console.error("Error registering land:", error);
+        }
+      });
+      
+      // Setup the check button
+      document.getElementById("checkBtn").addEventListener("click", async () => {
+        const location = document.getElementById("checkLocation").value;
+        if (!location) {
+          alert("Please enter coordinates");
+          return;
+        }
+        
+        document.getElementById("checkResult").textContent = "Checking land status...";
+        // Implement your check logic here
+      });
+    } else {
+      console.log("No wallet address found.");
+      alert("No wallet connected. Redirecting to the homepage.");
+      window.location.href = "../index.html";
+    }
+  </script>
+</body>
 </html>
