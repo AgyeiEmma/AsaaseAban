@@ -4,6 +4,9 @@ const pool = require("./database.js");
 const express = require("express");
 const app = express(); // ✅ Define app before using it
 
+const cors = require("cors");
+app.use(cors()); // Enable CORS for all routes
+
 const userLandsRoute = require("./routes/userLands");
 
 app.use(express.json());

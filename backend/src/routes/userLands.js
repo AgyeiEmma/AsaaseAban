@@ -11,13 +11,13 @@ router.get("/user-lands/:wallet", async (req, res) => {
     console.log("🧾 Wallet from request:", wallet);
 
     try {
+        // Updated query to join user_land with romman to get geospatial data
         const result = await pool.query(
-            `SELECT ul.*, 
-                    l.verified, 
-                    l.document_hash,
-                    ST_AsGeoJSON(l.geometry) as geojson 
+            `SELECT ul.id, ul.blockchain_id, ul.land_id, 
+                    r.grantor, r.grantee, r.instrument, r.acreage, 
+                    ST_AsGeoJSON(r.wkb_geometry) as geojson 
              FROM public.user_land ul
-             JOIN lands l ON ul.land_id = l.id
+             JOIN public.romman r ON ul.land_id = r.ogc_fid
              WHERE ul.blockchain_id = $1`,
             [wallet]
         );
