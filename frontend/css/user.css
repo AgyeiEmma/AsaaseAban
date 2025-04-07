@@ -316,3 +316,43 @@ box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     padding: 0 1rem;
 }
 }
+/* Scrollable lands list */
+.scrollable-lands-list {
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 10px;
+  }
+  
+  /* Custom scrollbar styling */
+  .scrollable-lands-list::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .scrollable-lands-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+  }
+  
+  .scrollable-lands-list::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+  }
+  
+  .scrollable-lands-list::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+  
+  /* Land item styling */
+  .land-item {
+    margin-bottom: 12px;
+    padding: 12px;
+    background-color: #f9f9f9;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+  }
+  
+  .land-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  }
