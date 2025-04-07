@@ -105,24 +105,28 @@
   </div>
   
   <!-- Script -->
+  <!-- Replace the existing script section -->
   <script type="module">
+    import { displayAllLands } from "../js/adminLands.js";
+    import { verifyLand, transferLand } from "../js/web3.js";
+    
     // Get wallet address
     const walletAddress = localStorage.getItem("walletAddress");
     console.log("Admin Wallet Address:", walletAddress);
-  
-    // Initialize map with appropriate starting position for Ghana
+
+    // Initialize map
     const map = L.map('map').setView([5.6037, -0.1870], 10);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
-  
+
     if (walletAddress) {
       // Display the wallet address on the page
       document.getElementById("userWallet").textContent = 
         `${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}`;
       
-      // Load all land parcels function call would go here
-      // loadAllLands(map);
+      // Load all land parcels
+      displayAllLands(map);
       
       // Setup verify button
       document.getElementById("verifyLand").addEventListener("click", async () => {
@@ -131,7 +135,15 @@
           alert("Please enter a Land ID");
           return;
         }
-        // Verify land logic here
+        try {
+          await verifyLand(landId);
+          alert("Land verified successfully!");
+          // Refresh lands display
+          displayAllLands(map);
+        } catch (error) {
+          console.error("Error verifying land:", error);
+          alert("Failed to verify land: " + error.message);
+        }
       });
       
       // Setup transfer button
@@ -142,7 +154,16 @@
           alert("Please fill in all required fields");
           return;
         }
-        // Transfer land logic here
+        
+        try {
+          await transferLand(landId, newOwner);
+          alert("Land transferred successfully!");
+          // Refresh lands display
+          displayAllLands(map);
+        } catch (error) {
+          console.error("Error transferring land:", error);
+          alert("Failed to transfer land: " + error.message);
+        }
       });
 
       // Setup logout button

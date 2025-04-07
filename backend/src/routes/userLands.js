@@ -37,4 +37,28 @@ router.get("/user-lands/:wallet", async (req, res) => {
     console.log("===========================================\n");
 });
 
+// GET all lands (for admin dashboard)
+router.get("/all-lands", async (req, res) => {
+    console.log("===========================================");
+    console.log("📥 Incoming request: GET /all-lands");
+
+    try {
+        // Query to get all land parcels with geospatial data
+        const result = await pool.query(
+            `SELECT r.ogc_fid as land_id, r.grantor, r.grantee, r.instrument, 
+                   r.acreage, ST_AsGeoJSON(r.wkb_geometry) as geojson 
+             FROM public.romman r`
+        );
+
+        console.log("✅ Query successful.");
+        console.log("📦 Returned rows:", result.rows.length);
+        res.json(result.rows);
+    } catch (err) {
+        console.error("❌ Database error:", err.message);
+        res.status(500).json({ error: "Internal Server Error: " + err.message });
+    }
+
+    console.log("===========================================\n");
+});
+
 module.exports = router;
