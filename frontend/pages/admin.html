@@ -1,45 +1,159 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Asaase Aban</title>
-    <link rel="stylesheet" href="../css/styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Dashboard | Asaase Aban</title>
+
+  <!-- Leaflet Styles and Scripts -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/user.css" />
 </head>
 <body>
-    <script>
-      // Check if user is admin on page load
-      document.addEventListener("DOMContentLoaded", () => {
-        const userRole = localStorage.getItem("userRole");
-        const walletAddress = localStorage.getItem("walletAddress");
-        
-        if (!walletAddress || parseInt(userRole) !== 1) {
-          alert("You don't have admin privileges");
-          window.location.href = "/index.html";
+  <script>
+    // Check if user is admin on page load
+    document.addEventListener("DOMContentLoaded", () => {
+      const userRole = localStorage.getItem("userRole");
+      const walletAddress = localStorage.getItem("walletAddress");
+      
+      if (!walletAddress || parseInt(userRole) !== 1) {
+        alert("You don't have admin privileges");
+        window.location.href = "../index.html";
+      }
+    });
+  </script>
+
+  <!-- Top Navigation Bar -->
+  <nav class="navbar">
+    <a href="#" class="navbar-logo">
+      <i class="fas fa-shield-alt"></i>
+      Asaase Aban Admin
+    </a>
+    <div class="navbar-right">
+      <div class="wallet-pill">
+        <div class="status-dot"></div>
+        <span id="userWallet">Loading wallet...</span>
+      </div>
+      <button id="logout" class="logout-btn">
+        <i class="fas fa-sign-out-alt"></i>
+        Logout
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="main-container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <!-- Verify Land Card -->
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-check-circle"></i>
+          <h2>Verify Land</h2>
+        </div>
+        <div class="form-group">
+          <label for="verifyLandId">Land ID</label>
+          <input type="number" id="verifyLandId" placeholder="Enter Land ID" />
+        </div>
+        <button id="verifyLand">
+          <i class="fas fa-certificate"></i>
+          Verify Land
+        </button>
+      </div>
+      
+      <!-- Transfer Ownership Card -->
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-exchange-alt"></i>
+          <h2>Transfer Ownership</h2>
+        </div>
+        <div class="form-group">
+          <label for="transferLandId">Land ID</label>
+          <input type="number" id="transferLandId" placeholder="Enter Land ID" />
+        </div>
+        <div class="form-group">
+          <label for="newOwner">New Owner</label>
+          <input type="text" id="newOwner" placeholder="Enter Wallet Address" />
+        </div>
+        <button id="transferLand">
+          <i class="fas fa-arrow-right"></i>
+          Transfer Land
+        </button>
+      </div>
+      
+      <!-- All Lands Card -->
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-map-marked-alt"></i>
+          <h2>All Registered Lands</h2>
+        </div>
+        <div id="allLandsContainer">
+          <p id="loadingLands" style="color: var(--mid-gray); font-size: 0.9rem;">Loading all lands...</p>
+          <div id="allLandsList"></div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Map Container -->
+    <div class="map-container">
+      <div id="map"></div>
+    </div>
+  </div>
+  
+  <!-- Script -->
+  <script type="module">
+    // Get wallet address
+    const walletAddress = localStorage.getItem("walletAddress");
+    console.log("Admin Wallet Address:", walletAddress);
+  
+    // Initialize map with appropriate starting position for Ghana
+    const map = L.map('map').setView([5.6037, -0.1870], 10);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+  
+    if (walletAddress) {
+      // Display the wallet address on the page
+      document.getElementById("userWallet").textContent = 
+        `${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}`;
+      
+      // Load all land parcels function call would go here
+      // loadAllLands(map);
+      
+      // Setup verify button
+      document.getElementById("verifyLand").addEventListener("click", async () => {
+        const landId = document.getElementById("verifyLandId").value;
+        if (!landId) {
+          alert("Please enter a Land ID");
+          return;
         }
+        // Verify land logic here
       });
-    </script>
-    <header>
-        <h1>🔑 Admin Dashboard</h1>
-        <button id="logout">Logout</button>
-    </header>
-    
-    <main>
-        <section>
-            <h2>✅ Verify Land</h2>
-            <input type="number" id="verifyLandId" placeholder="Enter Land ID">
-            <button id="verifyLand">Verify Land</button>
-        </section>
-        
-        <section>
-            <h2>🔄 Transfer Ownership</h2>
-            <input type="number" id="transferLandId" placeholder="Land ID">
-            <input type="text" id="newOwner" placeholder="New Owner Address">
-            <button id="transferLand">Transfer</button>
-        </section>
-    </main>
-    
-    <script src="../js/web3.js"></script>
-    <script src="../js/script.js"></script>
+      
+      // Setup transfer button
+      document.getElementById("transferLand").addEventListener("click", async () => {
+        const landId = document.getElementById("transferLandId").value;
+        const newOwner = document.getElementById("newOwner").value;
+        if (!landId || !newOwner) {
+          alert("Please fill in all required fields");
+          return;
+        }
+        // Transfer land logic here
+      });
+
+      // Setup logout button
+      document.getElementById("logout").addEventListener("click", () => {
+        localStorage.removeItem("walletAddress");
+        localStorage.removeItem("userRole");
+        window.location.href = "../index.html";
+      });
+    } else {
+      window.location.href = "../index.html";
+    }
+  </script>
 </body>
 </html>
