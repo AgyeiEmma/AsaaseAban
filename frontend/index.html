@@ -46,18 +46,30 @@
     </footer>
 </body>
 <script type="module">
-    import { connectWallet } from "./js/web3.js";
+    import { connectWallet, checkUserRole } from "./js/web3.js";
   
     document.getElementById("connectWallet").addEventListener("click", async () => {
       try {
-        const walletAddress = await connectWallet();
-        alert(`Wallet connected: ${walletAddress}`);
-        // Redirect to user.html with the wallet address as a query parameter
-        window.location.href = `/pages/user.html?wallet=${walletAddress}`;
+            const walletAddress = await connectWallet();
+            if (walletAddress) {
+            // Check user role
+            const userRole = await checkUserRole(walletAddress);
+            
+            // Store wallet and role in localStorage
+            localStorage.setItem("walletAddress", walletAddress);
+            localStorage.setItem("userRole", userRole);
+            
+            // Redirect based on role
+            if (parseInt(userRole) === 1) {
+                window.location.href = `./pages/admin.html`;
+            } else {
+                window.location.href = `./pages/user.html`;
+            }
+        }
       } catch (error) {
         console.error("❌ Error connecting wallet:", error);
         alert("Failed to connect wallet. Please try again.");
       }
     });
-  </script>
+</script>
 </html>

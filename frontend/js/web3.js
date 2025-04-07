@@ -23,10 +23,23 @@ export async function connectWallet() {
 
         const walletAddress = await signer.getAddress();
         document.getElementById("walletAddress").innerHTML = `🟢 Connected: <a href="https://sepolia.etherscan.io/address/${walletAddress}" target="_blank">${walletAddress}</a>`;
-        // window.location.href = 'pages/user.html';
         return walletAddress;
     } else {
         alert("❌ Please install MetaMask!");
+    }
+}
+
+export async function checkUserRole(walletAddress) {
+    try {
+        const response = await fetch(`http://localhost:8000/api/user/${walletAddress}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const userData = await response.json();
+        return userData.user_role;
+    } catch (error) {
+        console.error("Error checking user role:", error);
+        return 0; // Default to regular user if there's an error
     }
 }
 

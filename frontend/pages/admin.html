@@ -7,6 +7,18 @@
     <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
+    <script>
+      // Check if user is admin on page load
+      document.addEventListener("DOMContentLoaded", () => {
+        const userRole = localStorage.getItem("userRole");
+        const walletAddress = localStorage.getItem("walletAddress");
+        
+        if (!walletAddress || parseInt(userRole) !== 1) {
+          alert("You don't have admin privileges");
+          window.location.href = "/index.html";
+        }
+      });
+    </script>
     <header>
         <h1>🔑 Admin Dashboard</h1>
         <button id="logout">Logout</button>

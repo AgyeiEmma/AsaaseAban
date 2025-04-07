@@ -44,16 +44,16 @@ function updateMapWithLand(land) {
 // ✅ DOM Ready
 document.addEventListener("DOMContentLoaded", function () {
   // ✅ Connect Wallet and Redirect
-  const connectBtn = document.getElementById("connectWallet");
-  if (connectBtn) {
-    connectBtn.addEventListener("click", async () => {
-      const walletAddress = await connectWallet();
-      if (walletAddress) {
-        localStorage.setItem("walletAddress", walletAddress);
-        window.location.href = "pages/user.html";
-      }
-    });
-  }
+  // const connectBtn = document.getElementById("connectWallet");
+  // if (connectBtn) {
+  //   connectBtn.addEventListener("click", async () => {
+  //     const walletAddress = await connectWallet();
+  //     if (walletAddress) {
+  //       localStorage.setItem("walletAddress", walletAddress);
+  //       window.location.href = "pages/user.html";
+  //     }
+  //   });
+  // }
 
   // ✅ Register Land
   document.getElementById("registerLand")?.addEventListener("click", async () => {

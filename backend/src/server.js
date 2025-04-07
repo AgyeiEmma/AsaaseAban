@@ -8,12 +8,14 @@ const cors = require("cors");
 app.use(cors()); // Enable CORS for all routes
 
 const userLandsRoute = require("./routes/userLands");
+const userRoutes = require("./routes/userRoutes"); // Import user routes
 
 app.use(express.json());
 app.use(express.static("public")); // or your actual frontend folder
 
 // ✅ Now this works because app is already defined
 app.use("/api", userLandsRoute);
+app.use("/api", userRoutes); // Add user routes
 
 // ✅ Test DB Connection
 app.get("/api/test-db", async (req, res) => {
