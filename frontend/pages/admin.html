@@ -49,6 +49,18 @@
   <div class="main-container">
     <!-- Sidebar -->
     <div class="sidebar">
+      <!-- All Lands Card - Now First -->
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-map-marked-alt"></i>
+          <h2>All Registered Lands</h2>
+        </div>
+        <div id="allLandsContainer">
+          <p id="loadingLands" style="color: var(--mid-gray); font-size: 0.9rem;">Loading all lands...</p>
+          <div id="allLandsList" class="scrollable-lands-list"></div>
+        </div>
+      </div>
+      
       <!-- Verify Land Card -->
       <div class="card">
         <div class="card-header">
@@ -83,18 +95,6 @@
           <i class="fas fa-arrow-right"></i>
           Transfer Land
         </button>
-      </div>
-      
-      <!-- All Lands Card -->
-      <div class="card">
-        <div class="card-header">
-          <i class="fas fa-map-marked-alt"></i>
-          <h2>All Registered Lands</h2>
-        </div>
-        <div id="allLandsContainer">
-          <p id="loadingLands" style="color: var(--mid-gray); font-size: 0.9rem;">Loading all lands...</p>
-          <div id="allLandsList" class="scrollable-lands-list"></div>
-        </div>
       </div>
     </div>
     
