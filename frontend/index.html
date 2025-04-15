@@ -30,8 +30,10 @@
 <body>
     <header>
         <h1>🌍 Asaase Aban - Blockchain Land Registry</h1>
-        <button id="connectWallet">Connect Wallet</button>
-        <p id="walletAddress">🔴 Wallet Not Connected</p>
+        <nav>
+            <button id="connectWallet">Connect Wallet</button>
+            <p id="walletAddress">🔴 Not connected</p>
+        </nav>
     </header>
 
     <main>
@@ -44,32 +46,39 @@
     <footer>
         <p>© 2025 Asaase Aban. All Rights Reserved.</p>
     </footer>
-</body>
-<script type="module">
-    import { connectWallet, checkUserRole } from "./js/web3.js";
-  
-    document.getElementById("connectWallet").addEventListener("click", async () => {
-      try {
-            const walletAddress = await connectWallet();
-            if (walletAddress) {
-            // Check user role
-            const userRole = await checkUserRole(walletAddress);
-            
-            // Store wallet and role in localStorage
-            localStorage.setItem("walletAddress", walletAddress);
-            localStorage.setItem("userRole", userRole);
-            
-            // Redirect based on role
-            if (parseInt(userRole) === 1) {
-                window.location.href = `./pages/admin.html`;
-            } else {
-                window.location.href = `./pages/user.html`;
+
+    <script type="module">
+        import { connectWallet, checkUserRole } from "./js/web3.js";
+        
+        // Initialize map
+        const map = L.map('map').setView([5.6037, -0.1870], 10);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+        
+        document.getElementById("connectWallet").addEventListener("click", async () => {
+            try {
+                const walletAddress = await connectWallet();
+                if (walletAddress) {
+                    // Check user role
+                    const userRole = await checkUserRole(walletAddress);
+                    console.log("User role:", userRole);
+                    
+                    // Store wallet and role in localStorage
+                    localStorage.setItem("walletAddress", walletAddress);
+                    localStorage.setItem("userRole", userRole);
+                    
+                    // Redirect based on role
+                    if (Number(userRole) === 1) {
+                        window.location.href = "./pages/admin.html";
+                    } else {
+                        window.location.href = "./pages/user.html";
+                    }
+                }
+            } catch (error) {
+                console.error("❌ Error connecting wallet:", error);
+                alert("Failed to connect wallet. Please try again.");
             }
-        }
-      } catch (error) {
-        console.error("❌ Error connecting wallet:", error);
-        alert("Failed to connect wallet. Please try again.");
-      }
-    });
-</script>
-</html>
+        });
+    </script>
+</body>
