@@ -252,7 +252,26 @@
             }
 
             try {
+              // First, update the blockchain using the existing transferLand function
               await transferLand(landId, newOwner);
+              
+              // Then, update the database
+              const response = await fetch("http://localhost:8000/api/transfer-land", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  landId: landId,
+                  newOwner: newOwner,
+                  currentOwner: walletAddress
+                }),
+              });
+
+              if (!response.ok) {
+                throw new Error(`Failed to update database: ${response.status}`);
+              }
+
               alert("Land transferred successfully!");
               // Refresh lands display
               displayAllLands(map);

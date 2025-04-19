@@ -61,4 +61,64 @@ router.get("/all-lands", async (req, res) => {
     console.log("===========================================\n");
 });
 
+// POST route to transfer land ownership
+router.post("/transfer-land", async (req, res) => {
+    console.log("===========================================");
+    console.log("📥 Incoming request: POST /transfer-land");
+    
+    const { landId, newOwner, currentOwner } = req.body;
+    
+    console.log("🧾 Transfer details:", { landId, from: currentOwner, to: newOwner });
+    
+    if (!landId || !newOwner || !currentOwner) {
+        return res.status(400).json({ error: "Missing required fields" });
+    }
+    
+    try {
+        // Check if the land exists and belongs to the current owner
+        const checkResult = await pool.query(
+            `SELECT * FROM public.user_land 
+             WHERE land_id = $1 AND blockchain_id = $2`,
+            [landId, currentOwner]
+        );
+        
+        if (checkResult.rows.length === 0) {
+            return res.status(403).json({ 
+                error: "You don't own this land or it doesn't exist" 
+            });
+        }
+        
+        // Check if new owner exists in users table
+        const userCheck = await pool.query(
+            `SELECT blockchain_id FROM public.users WHERE blockchain_id = $1`,
+            [newOwner]
+        );
+        
+        if (userCheck.rows.length === 0) {
+            // New owner doesn't exist yet, add them to users table
+            await pool.query(
+                `INSERT INTO public.users (blockchain_id) VALUES ($1)`,
+                [newOwner]
+            );
+            console.log("✅ Added new user to database:", newOwner);
+        }
+        
+        // Update the land ownership
+        await pool.query(
+            `UPDATE public.user_land 
+             SET blockchain_id = $1 
+             WHERE land_id = $2 AND blockchain_id = $3`,
+            [newOwner, landId, currentOwner]
+        );
+        
+        console.log("✅ Land transferred successfully");
+        res.json({ success: true, message: "Land transferred successfully" });
+    } catch (err) {
+        console.error("❌ Database error:", err.message);
+        res.status(500).json({ error: "Internal Server Error: " + err.message });
+    }
+    
+    console.log("===========================================\n");
+});
+
 module.exports = router;
