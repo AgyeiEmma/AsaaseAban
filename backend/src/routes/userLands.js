@@ -43,15 +43,18 @@ router.get("/all-lands", async (req, res) => {
     console.log("📥 Incoming request: GET /all-lands");
 
     try {
-        // Query to get all land parcels with geospatial data
+        // Query that includes ownership information
         const result = await pool.query(
             `SELECT r.ogc_fid as land_id, r.grantor, r.grantee, r.instrument, 
-                   r.acreage, ST_AsGeoJSON(r.wkb_geometry) as geojson 
-             FROM public.romman r`
+                   r.acreage, r.wkb_geometry,
+                   ul.blockchain_id
+             FROM public.romman r
+             LEFT JOIN public.user_land ul ON r.ogc_fid = ul.land_id`
         );
 
         console.log("✅ Query successful.");
         console.log("📦 Returned rows:", result.rows.length);
+
         res.json(result.rows);
     } catch (err) {
         console.error("❌ Database error:", err.message);
@@ -70,24 +73,47 @@ router.post("/transfer-land", async (req, res) => {
     
     console.log("🧾 Transfer details:", { landId, from: currentOwner, to: newOwner });
     
-    if (!landId || !newOwner || !currentOwner) {
+    if (!landId || !newOwner) {
         return res.status(400).json({ error: "Missing required fields" });
     }
     
     try {
-        // Check if the land exists and belongs to the current owner
+        // Check if the land exists (but don't restrict to current owner - admin can transfer any land)
         const checkResult = await pool.query(
-            `SELECT * FROM public.user_land 
-             WHERE land_id = $1 AND blockchain_id = $2`,
-            [landId, currentOwner]
+            `SELECT * FROM public.user_land WHERE land_id = $1`,
+            [landId]
         );
         
         if (checkResult.rows.length === 0) {
-            return res.status(403).json({ 
-                error: "You don't own this land or it doesn't exist" 
-            });
+            // Land isn't assigned to anyone yet, we need to insert a new record
+            console.log("✅ Land not yet in user_land table, creating new record");
+            
+            // Check if new owner exists in users table
+            const userCheck = await pool.query(
+                `SELECT blockchain_id FROM public.users WHERE blockchain_id = $1`,
+                [newOwner]
+            );
+            
+            if (userCheck.rows.length === 0) {
+                // New owner doesn't exist yet, add them to users table
+                await pool.query(
+                    `INSERT INTO public.users (blockchain_id) VALUES ($1)`,
+                    [newOwner]
+                );
+                console.log("✅ Added new user to database:", newOwner);
+            }
+            
+            // Insert new land ownership record
+            await pool.query(
+                `INSERT INTO public.user_land (land_id, blockchain_id) VALUES ($1, $2)`,
+                [landId, newOwner]
+            );
+            
+            console.log("✅ New land ownership record created");
+            return res.json({ success: true, message: "Land assigned successfully" });
         }
         
+        // Land exists, update the owner
         // Check if new owner exists in users table
         const userCheck = await pool.query(
             `SELECT blockchain_id FROM public.users WHERE blockchain_id = $1`,
@@ -107,8 +133,8 @@ router.post("/transfer-land", async (req, res) => {
         await pool.query(
             `UPDATE public.user_land 
              SET blockchain_id = $1 
-             WHERE land_id = $2 AND blockchain_id = $3`,
-            [newOwner, landId, currentOwner]
+             WHERE land_id = $2`,
+            [newOwner, landId]
         );
         
         console.log("✅ Land transferred successfully");

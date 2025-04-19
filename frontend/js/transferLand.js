@@ -1,5 +1,26 @@
 import { connectWallet } from "./web3.js";
 
+// Fetch all lands (not just admin's)
+export async function fetchAllLands() {
+  try {
+    console.log("Fetching all lands...");
+    const response = await fetch(
+      `http://localhost:8000/api/all-lands`
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch all lands: ${response.status}`);
+    }
+
+    const lands = await response.json();
+    console.log("Received all lands:", lands);
+    return lands;
+  } catch (error) {
+    console.error("❌ Error fetching all lands:", error);
+    return [];
+  }
+}
+
 // Fetch lands owned by the current admin
 export async function fetchAdminLands(walletAddress) {
   try {
@@ -68,8 +89,8 @@ export function setupTransferLandFeature(walletAddress) {
     landsDropdown.classList.add("active");
 
     try {
-      // Fetch admin-owned lands
-      const lands = await fetchAdminLands(walletAddress);
+      // Fetch all lands, not just admin's lands
+      const lands = await fetchAllLands();
 
       // Clear loading indicator
       landsDropdown.innerHTML = "";
@@ -81,12 +102,21 @@ export function setupTransferLandFeature(walletAddress) {
 
       console.log(`Found ${lands.length} lands to display`);
 
-      // Populate dropdown with lands owned by the admin
+      // Populate dropdown with all lands
       lands.forEach((land) => {
         const item = document.createElement("div");
         item.className = "dropdown-item";
 
         const landId = land.land_id;
+        // Get owner info from blockchain_id in the user_land table
+        let ownerInfo = "Unknown owner";
+        
+        // Try to show owner info if available
+        if (land.blockchain_id) {
+          const shortOwner = `${land.blockchain_id.substring(0, 6)}...${land.blockchain_id.substring(land.blockchain_id.length - 4)}`;
+          ownerInfo = `Owner: ${shortOwner}`;
+        }
+        
         const landInfo = land.grantor ? `${land.grantor} - ${land.grantee || 'N/A'}` : 'Land';
         const acreage = land.acreage ? `${land.acreage} acres` : 'No size data';
 
@@ -94,6 +124,7 @@ export function setupTransferLandFeature(walletAddress) {
           <div class="land-info">
             <strong>Land #${landId}</strong>
             <span class="land-details">${landInfo} (${acreage})</span>
+            <span class="land-owner">${ownerInfo}</span>
           </div>
         `;
 

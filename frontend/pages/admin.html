@@ -76,6 +76,14 @@
         color: #666;
         margin-top: 3px;
       }
+
+      /* Add this to your existing styles */
+      .land-owner {
+        font-size: 0.8em;
+        color: #0066cc;
+        margin-top: 3px;
+        font-weight: 500;
+      }
     </style>
   </head>
   <body>
@@ -252,10 +260,7 @@
             }
 
             try {
-              // First, update the blockchain using the existing transferLand function
-              await transferLand(landId, newOwner);
-              
-              // Then, update the database
+              // First update the database (this way if blockchain fails, we can retry)
               const response = await fetch("http://localhost:8000/api/transfer-land", {
                 method: "POST",
                 headers: {
@@ -270,6 +275,22 @@
 
               if (!response.ok) {
                 throw new Error(`Failed to update database: ${response.status}`);
+              }
+              
+              // Try blockchain update (but don't block on it)
+              try {
+                // Check if the address is valid before calling transferLand
+                if (newOwner.startsWith('0x') && newOwner.length === 42) {
+                  await transferLand(landId, newOwner);
+                  console.log("✅ Blockchain updated successfully");
+                } else {
+                  console.warn("⚠️ Invalid Ethereum address format, skipping blockchain update");
+                }
+              } catch (blockchainError) {
+                console.error("❌ Error updating blockchain:", blockchainError);
+                // Don't fail the whole operation, just show a warning
+                alert("Database updated but blockchain update failed: " + blockchainError.message);
+                return;
               }
 
               alert("Land transferred successfully!");
