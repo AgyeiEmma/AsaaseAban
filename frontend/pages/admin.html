@@ -1,180 +1,263 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Admin Dashboard | Asaase Aban</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard | Asaase Aban</title>
 
-  <!-- Leaflet Styles and Scripts -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  
-  <!-- Font Awesome for icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <link rel="stylesheet" href="../css/user.css" />
-</head>
-<body>
-  <script>
-    // Check if user is admin on page load
-    document.addEventListener("DOMContentLoaded", () => {
-      const userRole = localStorage.getItem("userRole");
+    <!-- Leaflet Styles and Scripts -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <!-- Font Awesome for icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="../css/user.css" />
+    <style>
+      /* Update the dropdown container positioning */
+      .form-group {
+        position: relative; /* Make the form group a positioning context */
+      }
+
+      .dropdown-container {
+        position: absolute;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        width: 100%; /* Take width of parent (form-group) */
+        max-width: 100%; /* Don't exceed parent width */
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 1000;
+        display: none;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-top: 2px;
+        left: 0; /* Align with left edge of parent */
+        right: 0; /* Constrain to right edge of parent */
+      }
+
+      /* Rest of your dropdown styles remain the same */
+      .dropdown-container.active {
+        display: block;
+      }
+
+      .dropdown-item {
+        padding: 10px 15px;
+        border-bottom: 1px solid #eee;
+        cursor: pointer;
+      }
+
+      .dropdown-item:hover {
+        background-color: #f7f7f7;
+      }
+
+      .user-info {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .user-info .wallet {
+        font-size: 0.8em;
+        color: #666;
+        margin-top: 3px;
+        word-break: break-all;
+      }
+    </style>
+  </head>
+  <body>
+    <script>
+      // Check if user is admin on page load
+      document.addEventListener("DOMContentLoaded", () => {
+        const userRole = localStorage.getItem("userRole");
+        const walletAddress = localStorage.getItem("walletAddress");
+
+        if (!walletAddress || parseInt(userRole) !== 1) {
+          alert("You don't have admin privileges");
+          window.location.href = "../index.html";
+        }
+      });
+    </script>
+
+    <!-- Top Navigation Bar -->
+    <nav class="navbar">
+      <a href="#" class="navbar-logo">
+        <i class="fas fa-shield-alt"></i>
+        Asaase Aban Admin
+      </a>
+      <div class="navbar-right">
+        <div class="wallet-pill">
+          <div class="status-dot"></div>
+          <span id="userWallet">Loading wallet...</span>
+        </div>
+        <button id="logout" class="logout-btn">
+          <i class="fas fa-sign-out-alt"></i>
+          Logout
+        </button>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-container">
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <!-- All Lands Card - Now First -->
+        <div class="card">
+          <div class="card-header">
+            <i class="fas fa-map-marked-alt"></i>
+            <h2>All Registered Lands</h2>
+          </div>
+          <div id="allLandsContainer">
+            <p
+              id="loadingLands"
+              style="color: var(--mid-gray); font-size: 0.9rem"
+            >
+              Loading all lands...
+            </p>
+            <div id="allLandsList" class="scrollable-lands-list"></div>
+          </div>
+        </div>
+
+        <!-- Verify Land Card -->
+        <div class="card">
+          <div class="card-header">
+            <i class="fas fa-check-circle"></i>
+            <h2>Verify Land</h2>
+          </div>
+          <div class="form-group">
+            <label for="verifyLandId">Land ID</label>
+            <input
+              type="number"
+              id="verifyLandId"
+              placeholder="Enter Land ID"
+            />
+          </div>
+          <button id="verifyLand">
+            <i class="fas fa-certificate"></i>
+            Verify Land
+          </button>
+        </div>
+
+        <!-- Transfer Ownership Card -->
+        <div class="card">
+          <div class="card-header">
+            <i class="fas fa-exchange-alt"></i>
+            <h2>Transfer Ownership</h2>
+          </div>
+          <div class="form-group">
+            <label for="transferLandId">Land ID</label>
+            <input
+              type="number"
+              id="transferLandId"
+              placeholder="Enter Land ID"
+            />
+          </div>
+          <div class="form-group">
+            <label for="newOwner">New Owner</label>
+            <input
+              type="text"
+              id="newOwner"
+              placeholder="Enter Wallet Address"
+            />
+            <!-- Add this dropdown container -->
+            <div id="usersDropdown" class="dropdown-container"></div>
+          </div>
+          <button id="transferLand">
+            <i class="fas fa-arrow-right"></i>
+            Transfer Land
+          </button>
+        </div>
+      </div>
+
+      <!-- Map Container -->
+      <div class="map-container">
+        <div id="map"></div>
+      </div>
+    </div>
+
+    <!-- Script -->
+    <!-- Replace the existing script section -->
+    <script type="module">
+      import { displayAllLands } from "../js/adminLands.js";
+      import { verifyLand, transferLand } from "../js/web3.js";
+      import { setupTransferLandFeature } from "../js/transferLand.js";
+
+      // Get wallet address
       const walletAddress = localStorage.getItem("walletAddress");
-      
-      if (!walletAddress || parseInt(userRole) !== 1) {
-        alert("You don't have admin privileges");
+      console.log("Admin Wallet Address:", walletAddress);
+
+      // Initialize map
+      const map = L.map("map").setView([5.6037, -0.187], 10);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      }).addTo(map);
+
+      if (walletAddress) {
+        // Display the wallet address on the page
+        document.getElementById(
+          "userWallet"
+        ).textContent = `${walletAddress.substring(
+          0,
+          6
+        )}...${walletAddress.substring(walletAddress.length - 4)}`;
+
+        // Load all land parcels
+        displayAllLands(map);
+        setupTransferLandFeature(walletAddress);
+
+        // Setup verify button
+        document
+          .getElementById("verifyLand")
+          .addEventListener("click", async () => {
+            const landId = document.getElementById("verifyLandId").value;
+            if (!landId) {
+              alert("Please enter a Land ID");
+              return;
+            }
+            try {
+              await verifyLand(landId);
+              alert("Land verified successfully!");
+              // Refresh lands display
+              displayAllLands(map);
+            } catch (error) {
+              console.error("Error verifying land:", error);
+              alert("Failed to verify land: " + error.message);
+            }
+          });
+
+        // Setup transfer button
+        document
+          .getElementById("transferLand")
+          .addEventListener("click", async () => {
+            const landId = document.getElementById("transferLandId").value;
+            const newOwner = document.getElementById("newOwner").value;
+            if (!landId || !newOwner) {
+              alert("Please fill in all required fields");
+              return;
+            }
+
+            try {
+              await transferLand(landId, newOwner);
+              alert("Land transferred successfully!");
+              // Refresh lands display
+              displayAllLands(map);
+            } catch (error) {
+              console.error("Error transferring land:", error);
+              alert("Failed to transfer land: " + error.message);
+            }
+          });
+
+        // Setup logout button
+        document.getElementById("logout").addEventListener("click", () => {
+          localStorage.removeItem("walletAddress");
+          localStorage.removeItem("userRole");
+          window.location.href = "../index.html";
+        });
+      } else {
         window.location.href = "../index.html";
       }
-    });
-  </script>
-
-  <!-- Top Navigation Bar -->
-  <nav class="navbar">
-    <a href="#" class="navbar-logo">
-      <i class="fas fa-shield-alt"></i>
-      Asaase Aban Admin
-    </a>
-    <div class="navbar-right">
-      <div class="wallet-pill">
-        <div class="status-dot"></div>
-        <span id="userWallet">Loading wallet...</span>
-      </div>
-      <button id="logout" class="logout-btn">
-        <i class="fas fa-sign-out-alt"></i>
-        Logout
-      </button>
-    </div>
-  </nav>
-
-  <!-- Main Content -->
-  <div class="main-container">
-    <!-- Sidebar -->
-    <div class="sidebar">
-      <!-- All Lands Card - Now First -->
-      <div class="card">
-        <div class="card-header">
-          <i class="fas fa-map-marked-alt"></i>
-          <h2>All Registered Lands</h2>
-        </div>
-        <div id="allLandsContainer">
-          <p id="loadingLands" style="color: var(--mid-gray); font-size: 0.9rem;">Loading all lands...</p>
-          <div id="allLandsList" class="scrollable-lands-list"></div>
-        </div>
-      </div>
-      
-      <!-- Verify Land Card -->
-      <div class="card">
-        <div class="card-header">
-          <i class="fas fa-check-circle"></i>
-          <h2>Verify Land</h2>
-        </div>
-        <div class="form-group">
-          <label for="verifyLandId">Land ID</label>
-          <input type="number" id="verifyLandId" placeholder="Enter Land ID" />
-        </div>
-        <button id="verifyLand">
-          <i class="fas fa-certificate"></i>
-          Verify Land
-        </button>
-      </div>
-      
-      <!-- Transfer Ownership Card -->
-      <div class="card">
-        <div class="card-header">
-          <i class="fas fa-exchange-alt"></i>
-          <h2>Transfer Ownership</h2>
-        </div>
-        <div class="form-group">
-          <label for="transferLandId">Land ID</label>
-          <input type="number" id="transferLandId" placeholder="Enter Land ID" />
-        </div>
-        <div class="form-group">
-          <label for="newOwner">New Owner</label>
-          <input type="text" id="newOwner" placeholder="Enter Wallet Address" />
-        </div>
-        <button id="transferLand">
-          <i class="fas fa-arrow-right"></i>
-          Transfer Land
-        </button>
-      </div>
-    </div>
-    
-    <!-- Map Container -->
-    <div class="map-container">
-      <div id="map"></div>
-    </div>
-  </div>
-  
-  <!-- Script -->
-  <!-- Replace the existing script section -->
-  <script type="module">
-    import { displayAllLands } from "../js/adminLands.js";
-    import { verifyLand, transferLand } from "../js/web3.js";
-    
-    // Get wallet address
-    const walletAddress = localStorage.getItem("walletAddress");
-    console.log("Admin Wallet Address:", walletAddress);
-
-    // Initialize map
-    const map = L.map('map').setView([5.6037, -0.1870], 10);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
-
-    if (walletAddress) {
-      // Display the wallet address on the page
-      document.getElementById("userWallet").textContent = 
-        `${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}`;
-      
-      // Load all land parcels
-      displayAllLands(map);
-      
-      // Setup verify button
-      document.getElementById("verifyLand").addEventListener("click", async () => {
-        const landId = document.getElementById("verifyLandId").value;
-        if (!landId) {
-          alert("Please enter a Land ID");
-          return;
-        }
-        try {
-          await verifyLand(landId);
-          alert("Land verified successfully!");
-          // Refresh lands display
-          displayAllLands(map);
-        } catch (error) {
-          console.error("Error verifying land:", error);
-          alert("Failed to verify land: " + error.message);
-        }
-      });
-      
-      // Setup transfer button
-      document.getElementById("transferLand").addEventListener("click", async () => {
-        const landId = document.getElementById("transferLandId").value;
-        const newOwner = document.getElementById("newOwner").value;
-        if (!landId || !newOwner) {
-          alert("Please fill in all required fields");
-          return;
-        }
-        
-        try {
-          await transferLand(landId, newOwner);
-          alert("Land transferred successfully!");
-          // Refresh lands display
-          displayAllLands(map);
-        } catch (error) {
-          console.error("Error transferring land:", error);
-          alert("Failed to transfer land: " + error.message);
-        }
-      });
-
-      // Setup logout button
-      document.getElementById("logout").addEventListener("click", () => {
-        localStorage.removeItem("walletAddress");
-        localStorage.removeItem("userRole");
-        window.location.href = "../index.html";
-      });
-    } else {
-      window.location.href = "../index.html";
-    }
-  </script>
-</body>
+    </script>
+  </body>
 </html>
