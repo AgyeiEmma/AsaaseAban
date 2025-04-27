@@ -18,9 +18,11 @@ export function displayAllLands(map) {
     loadingLands.textContent = "Loading all lands...";
   }
 
-  // Clear any existing markers
-  if (window.adminLandLayers) {
-    window.adminLandLayers.forEach((layer) => map.removeLayer(layer));
+  // Clear any existing markers with proper check to avoid errors
+  if (window.adminLandLayers && Array.isArray(window.adminLandLayers)) {
+    window.adminLandLayers.forEach((layer) => {
+      if (map && layer) map.removeLayer(layer);
+    });
   }
   window.adminLandLayers = [];
 
@@ -50,36 +52,33 @@ export function displayAllLands(map) {
         return;
       }
 
+      // Display lands in list
+      allLandsList.innerHTML = "";
+
       // Create bounds to fit all land features
       const bounds = L.latLngBounds();
 
       // Process each land
       lands.forEach((land, index) => {
         try {
-          // Validate land data
-          if (!land) {
-            console.warn("Empty land object received");
-            return;
-          }
-
+          // Skip if no geometry data
           if (!land.geojson) {
             console.warn("Land missing geojson data:", land);
-            // Create a list item even if we can't show it on map
             createLandListItem(land, index, allLandsList);
             return;
           }
 
-          // Parse the GeoJSON string into an object
+          // Parse the GeoJSON string into an object - SIMPLER APPROACH
           let geojsonData;
           try {
             geojsonData = JSON.parse(land.geojson);
           } catch (e) {
-            console.error("Failed to parse GeoJSON:", e, land.geojson);
+            console.error("Failed to parse GeoJSON:", e);
             createLandListItem(land, index, allLandsList);
             return;
           }
 
-          // Create a proper GeoJSON feature
+          // Create a proper GeoJSON feature - DIRECT APPROACH
           const feature = {
             type: "Feature",
             properties: {
@@ -116,28 +115,28 @@ export function displayAllLands(map) {
             onEachFeature: (feature, layer) => {
               // Add popup with land info
               const popupContent = `
-                  <div class="land-popup">
-                    <h3>Land #${feature.properties.id}</h3>
-                    <table>
-                      <tr>
-                        <td><strong>Grantor:</strong></td>
-                        <td>${feature.properties.grantor}</td>
-                      </tr>
-                      <tr>
-                        <td><strong>Grantee:</strong></td>
-                        <td>${feature.properties.grantee}</td>
-                      </tr>
-                      <tr>
-                        <td><strong>Acreage:</strong></td>
-                        <td>${feature.properties.acreage} acres</td>
-                      </tr>
-                      <tr>
-                        <td><strong>Instrument:</strong></td>
-                        <td>${feature.properties.instrument}</td>
-                      </tr>
-                    </table>
-                  </div>
-                `;
+                <div class="land-popup">
+                  <h3>Land #${feature.properties.id}</h3>
+                  <table>
+                    <tr>
+                      <td><strong>Grantor:</strong></td>
+                      <td>${feature.properties.grantor}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Grantee:</strong></td>
+                      <td>${feature.properties.grantee}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Acreage:</strong></td>
+                      <td>${feature.properties.acreage} acres</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Instrument:</strong></td>
+                      <td>${feature.properties.instrument}</td>
+                    </tr>
+                  </table>
+                </div>
+              `;
 
               layer.bindPopup(popupContent);
 
@@ -183,6 +182,7 @@ export function displayAllLands(map) {
           createLandListItem(land, index, allLandsList, color);
         } catch (error) {
           console.error("Error displaying land:", error, land);
+          createLandListItem(land, index, allLandsList, "#ccc");
         }
       });
 
@@ -192,20 +192,33 @@ export function displayAllLands(map) {
           const landId = button.getAttribute("data-land-id");
           console.log(`Zooming to land #${landId}`);
 
-          window.adminLandLayers.forEach((layerGroup) => {
-            layerGroup.eachLayer((layer) => {
-              if (layer.feature && layer.feature.properties.id == landId) {
-                map.fitBounds(layer.getBounds());
-                layer.openPopup();
-              }
+          let found = false;
+          if (window.adminLandLayers && window.adminLandLayers.length > 0) {
+            window.adminLandLayers.forEach((layerGroup) => {
+              layerGroup.eachLayer((layer) => {
+                if (layer.feature && layer.feature.properties.id == landId) {
+                  map.fitBounds(layer.getBounds());
+                  layer.openPopup();
+                  found = true;
+                }
+              });
             });
-          });
+          }
+
+          if (!found) {
+            console.warn(`Could not find layer for Land #${landId} to zoom to`);
+          }
         });
       });
 
       // Fit map to show all land parcels with padding
       if (bounds.isValid()) {
+        console.log("Fitting map to bounds:", bounds.toString());
         map.fitBounds(bounds, { padding: [50, 50] });
+      } else {
+        console.warn("No valid bounds to fit map to");
+        // Default to Ghana view
+        map.setView([5.6037, -0.187], 10);
       }
     })
     .catch((error) => {
@@ -222,8 +235,10 @@ export function displayAllLands(map) {
     });
 }
 
-// Helper function to create consistent land list items
+// Helper function for land list items (keep this part unchanged)
 function createLandListItem(land, index, container, color = "#ccc") {
+  if (!land || !container) return;
+
   const landItem = document.createElement("div");
   landItem.className = "land-item";
   landItem.style.borderLeft = `4px solid ${color}`;
