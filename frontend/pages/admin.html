@@ -98,6 +98,11 @@
       .transaction-item:last-child {
         border-bottom: none;
       }
+
+      .scrollable-transactions-list {
+        max-height: 300px;
+        overflow-y: auto;
+      }
     </style>
   </head>
   <body>
@@ -211,16 +216,20 @@
             <h2>All Transactions</h2>
           </div>
           <div id="transactionsContainer">
+            <!-- Filter input -->
+            <div class="form-group">
+              <label for="filterLandId">Filter by Land ID</label>
+              <input type="number" id="filterLandId" placeholder="Enter Land ID" />
+              <button id="filterTransactionsButton">Filter</button>
+            </div>
+
             <p
               id="loadingTransactions"
               style="color: var(--mid-gray); font-size: 0.9rem"
             >
               Loading transactions...
             </p>
-            <div
-              id="transactionsList"
-              class="scrollable-transactions-list"
-            ></div>
+            <div id="transactionsList" class="scrollable-transactions-list"></div>
           </div>
         </div>
       </div>
@@ -235,7 +244,7 @@
     <script type="module">
       import { displayAllLands } from "../js/adminLands.js";
       import { setupTransferLandFeature } from "../js/transferLand.js";
-      import { fetchAndDisplayTransactions } from "../js/adminTransactions.js";
+      import { fetchAndDisplayTransactions, filterTransactions } from "../js/adminTransactions.js";
 
       const walletAddress = localStorage.getItem("walletAddress");
       console.log("Admin Wallet Address:", walletAddress);
@@ -260,6 +269,12 @@
 
         // Load all transactions
         fetchAndDisplayTransactions();
+
+        // Filter transactions by Land ID
+        document.getElementById("filterTransactionsButton").addEventListener("click", () => {
+          const landId = document.getElementById("filterLandId").value;
+          filterTransactions(landId);
+        });
       } else {
         window.location.href = "../index.html";
       }
