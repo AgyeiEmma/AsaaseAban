@@ -84,6 +84,20 @@
         margin-top: 3px;
         font-weight: 500;
       }
+
+      .transaction-item {
+        border-bottom: 1px solid #ddd;
+        padding: 10px 0;
+        font-size: 0.9rem;
+      }
+
+      .transaction-item div {
+        margin-bottom: 5px;
+      }
+
+      .transaction-item:last-child {
+        border-bottom: none;
+      }
     </style>
   </head>
   <body>
@@ -189,6 +203,26 @@
             Transfer Land
           </button>
         </div>
+
+        <!-- Transactions Card -->
+        <div class="card">
+          <div class="card-header">
+            <i class="fas fa-list-alt"></i>
+            <h2>All Transactions</h2>
+          </div>
+          <div id="transactionsContainer">
+            <p
+              id="loadingTransactions"
+              style="color: var(--mid-gray); font-size: 0.9rem"
+            >
+              Loading transactions...
+            </p>
+            <div
+              id="transactionsList"
+              class="scrollable-transactions-list"
+            ></div>
+          </div>
+        </div>
       </div>
 
       <!-- Map Container -->
@@ -198,17 +232,14 @@
     </div>
 
     <!-- Script -->
-    <!-- Replace the existing script section -->
     <script type="module">
       import { displayAllLands } from "../js/adminLands.js";
-      import { verifyLand, transferLand } from "../js/web3.js";
       import { setupTransferLandFeature } from "../js/transferLand.js";
+      import { fetchAndDisplayTransactions } from "../js/adminTransactions.js";
 
-      // Get wallet address
       const walletAddress = localStorage.getItem("walletAddress");
       console.log("Admin Wallet Address:", walletAddress);
 
-      // Initialize map
       const map = L.map("map").setView([5.6037, -0.187], 10);
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution:
@@ -216,7 +247,6 @@
       }).addTo(map);
 
       if (walletAddress) {
-        // Display the wallet address on the page
         document.getElementById(
           "userWallet"
         ).textContent = `${walletAddress.substring(
@@ -228,86 +258,8 @@
         displayAllLands(map);
         setupTransferLandFeature(walletAddress);
 
-        // Setup verify button
-        document
-          .getElementById("verifyLand")
-          .addEventListener("click", async () => {
-            const landId = document.getElementById("verifyLandId").value;
-            if (!landId) {
-              alert("Please enter a Land ID");
-              return;
-            }
-            try {
-              await verifyLand(landId);
-              alert("Land verified successfully!");
-              // Refresh lands display
-              displayAllLands(map);
-            } catch (error) {
-              console.error("Error verifying land:", error);
-              alert("Failed to verify land: " + error.message);
-            }
-          });
-
-        // Setup transfer button
-        document
-          .getElementById("transferLand")
-          .addEventListener("click", async () => {
-            const landId = document.getElementById("transferLandId").value;
-            const newOwner = document.getElementById("newOwner").value;
-            if (!landId || !newOwner) {
-              alert("Please fill in all required fields");
-              return;
-            }
-
-            try {
-              // First update the database (this way if blockchain fails, we can retry)
-              const response = await fetch("http://localhost:8000/api/transfer-land", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  landId: landId,
-                  newOwner: newOwner,
-                  currentOwner: walletAddress
-                }),
-              });
-
-              if (!response.ok) {
-                throw new Error(`Failed to update database: ${response.status}`);
-              }
-              
-              // Try blockchain update (but don't block on it)
-              try {
-                // Check if the address is valid before calling transferLand
-                if (newOwner.startsWith('0x') && newOwner.length === 42) {
-                  await transferLand(landId, newOwner);
-                  console.log("✅ Blockchain updated successfully");
-                } else {
-                  console.warn("⚠️ Invalid Ethereum address format, skipping blockchain update");
-                }
-              } catch (blockchainError) {
-                console.error("❌ Error updating blockchain:", blockchainError);
-                // Don't fail the whole operation, just show a warning
-                alert("Database updated but blockchain update failed: " + blockchainError.message);
-                return;
-              }
-
-              alert("Land transferred successfully!");
-              // Refresh lands display
-              displayAllLands(map);
-            } catch (error) {
-              console.error("Error transferring land:", error);
-              alert("Failed to transfer land: " + error.message);
-            }
-          });
-
-        // Setup logout button
-        document.getElementById("logout").addEventListener("click", () => {
-          localStorage.removeItem("walletAddress");
-          localStorage.removeItem("userRole");
-          window.location.href = "../index.html";
-        });
+        // Load all transactions
+        fetchAndDisplayTransactions();
       } else {
         window.location.href = "../index.html";
       }

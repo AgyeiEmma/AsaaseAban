@@ -58,6 +58,15 @@ CREATE TABLE IF NOT EXISTS public.users
     CONSTRAINT blockchain_id PRIMARY KEY (blockchain_id)
 );
 
+CREATE TABLE IF NOT EXISTS public.transactions (
+    id SERIAL PRIMARY KEY,
+    type VARCHAR(50) NOT NULL, -- e.g., "Transfer" or "Verification"
+    land_id INTEGER NOT NULL,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    initiator TEXT NOT NULL, -- Wallet address of the initiator
+    recipient TEXT -- Wallet address of the recipient (optional)
+);
+
 ALTER TABLE IF EXISTS public.user_land
     ADD CONSTRAINT user_land_blockchain_id_fkey FOREIGN KEY (blockchain_id)
     REFERENCES public.users (blockchain_id) MATCH SIMPLE

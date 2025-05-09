@@ -4,9 +4,7 @@ import { connectWallet } from "./web3.js";
 export async function fetchAllLands() {
   try {
     console.log("Fetching all lands...");
-    const response = await fetch(
-      `http://localhost:8000/api/all-lands`
-    );
+    const response = await fetch(`http://localhost:8000/api/all-lands`);
 
     if (!response.ok) {
       throw new Error(`Failed to fetch all lands: ${response.status}`);
@@ -64,7 +62,7 @@ export async function fetchUsers() {
 // Setup the transfer land functionality
 export function setupTransferLandFeature(walletAddress) {
   console.log("Setting up transfer land feature for wallet:", walletAddress);
-  
+
   const transferLandId = document.getElementById("transferLandId");
   const landsDropdown = document.getElementById("landsDropdown");
   const newOwner = document.getElementById("newOwner");
@@ -78,14 +76,15 @@ export function setupTransferLandFeature(walletAddress) {
   console.log("Found required elements");
 
   // Add click event listener to the Land ID input field
-  transferLandId.addEventListener("click", async function() {
+  transferLandId.addEventListener("click", async function () {
     console.log("Land ID input clicked");
-    
+
     // Clear the dropdown
     landsDropdown.innerHTML = "";
 
     // Show loading indicator
-    landsDropdown.innerHTML = '<div class="dropdown-item">Loading lands...</div>';
+    landsDropdown.innerHTML =
+      '<div class="dropdown-item">Loading lands...</div>';
     landsDropdown.classList.add("active");
 
     try {
@@ -96,7 +95,8 @@ export function setupTransferLandFeature(walletAddress) {
       landsDropdown.innerHTML = "";
 
       if (lands.length === 0) {
-        landsDropdown.innerHTML = '<div class="dropdown-item">No lands found</div>';
+        landsDropdown.innerHTML =
+          '<div class="dropdown-item">No lands found</div>';
         return;
       }
 
@@ -110,15 +110,20 @@ export function setupTransferLandFeature(walletAddress) {
         const landId = land.land_id;
         // Get owner info from blockchain_id in the user_land table
         let ownerInfo = "Unknown owner";
-        
+
         // Try to show owner info if available
         if (land.blockchain_id) {
-          const shortOwner = `${land.blockchain_id.substring(0, 6)}...${land.blockchain_id.substring(land.blockchain_id.length - 4)}`;
+          const shortOwner = `${land.blockchain_id.substring(
+            0,
+            6
+          )}...${land.blockchain_id.substring(land.blockchain_id.length - 4)}`;
           ownerInfo = `Owner: ${shortOwner}`;
         }
-        
-        const landInfo = land.grantor ? `${land.grantor} - ${land.grantee || 'N/A'}` : 'Land';
-        const acreage = land.acreage ? `${land.acreage} acres` : 'No size data';
+
+        const landInfo = land.grantor
+          ? `${land.grantor} - ${land.grantee || "N/A"}`
+          : "Land";
+        const acreage = land.acreage ? `${land.acreage} acres` : "No size data";
 
         item.innerHTML = `
           <div class="land-info">
@@ -143,20 +148,24 @@ export function setupTransferLandFeature(walletAddress) {
 
   // Close Land ID dropdown when clicking outside
   document.addEventListener("click", (event) => {
-    if (!transferLandId.contains(event.target) && !landsDropdown.contains(event.target)) {
+    if (
+      !transferLandId.contains(event.target) &&
+      !landsDropdown.contains(event.target)
+    ) {
       landsDropdown.classList.remove("active");
     }
   });
 
   // Add click event listener to the new owner input field
-  newOwner.addEventListener("click", async function() {
+  newOwner.addEventListener("click", async function () {
     console.log("New owner input clicked");
-    
+
     // Clear the dropdown
     usersDropdown.innerHTML = "";
 
     // Show loading indicator
-    usersDropdown.innerHTML = '<div class="dropdown-item">Loading users...</div>';
+    usersDropdown.innerHTML =
+      '<div class="dropdown-item">Loading users...</div>';
     usersDropdown.classList.add("active");
 
     try {
@@ -167,7 +176,8 @@ export function setupTransferLandFeature(walletAddress) {
       usersDropdown.innerHTML = "";
 
       if (users.length === 0) {
-        usersDropdown.innerHTML = '<div class="dropdown-item">No users found</div>';
+        usersDropdown.innerHTML =
+          '<div class="dropdown-item">No users found</div>';
         return;
       }
 
@@ -175,7 +185,11 @@ export function setupTransferLandFeature(walletAddress) {
 
       // Populate dropdown with users (excluding the current admin)
       users.forEach((user) => {
-        if (user.wallet_address === walletAddress || user.blockchain_id === walletAddress) return; // Skip current admin
+        if (
+          user.wallet_address === walletAddress ||
+          user.blockchain_id === walletAddress
+        )
+          return; // Skip current admin
 
         const item = document.createElement("div");
         item.className = "dropdown-item";
@@ -206,8 +220,43 @@ export function setupTransferLandFeature(walletAddress) {
 
   // Close User dropdown when clicking outside
   document.addEventListener("click", (event) => {
-    if (!newOwner.contains(event.target) && !usersDropdown.contains(event.target)) {
+    if (
+      !newOwner.contains(event.target) &&
+      !usersDropdown.contains(event.target)
+    ) {
       usersDropdown.classList.remove("active");
     }
   });
+
+  document
+    .getElementById("transferLand")
+    .addEventListener("click", async () => {
+      try {
+        const landId = document.getElementById("transferLandId").value;
+        const newOwner = document.getElementById("newOwner").value;
+
+        const response = await fetch(
+          "http://localhost:8000/api/transfer-land",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              landId,
+              newOwner,
+              currentOwner: walletAddress,
+            }),
+          }
+        );
+
+        const data = await response.json();
+        if (response.ok) {
+          alert(data.message || "Land transferred successfully.");
+        } else {
+          alert(data.error || "Something went wrong.");
+        }
+      } catch (error) {
+        console.error("❌ Error transferring land:", error);
+        alert("Error transferring land: " + error.message);
+      }
+    });
 }
