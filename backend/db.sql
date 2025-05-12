@@ -67,6 +67,19 @@ CREATE TABLE IF NOT EXISTS public.transactions (
     recipient TEXT -- Wallet address of the recipient (optional)
 );
 
+CREATE TABLE IF NOT EXISTS public.land_submissions (
+    id SERIAL PRIMARY KEY,
+    location TEXT NOT NULL,
+    document_path TEXT NOT NULL,
+    description TEXT,
+    owner_wallet TEXT NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'pending', -- 'pending', 'approved', 'rejected'
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP,
+    admin_notes TEXT,
+    reviewed_by TEXT
+);
+
 ALTER TABLE IF EXISTS public.user_land
     ADD CONSTRAINT user_land_blockchain_id_fkey FOREIGN KEY (blockchain_id)
     REFERENCES public.users (blockchain_id) MATCH SIMPLE

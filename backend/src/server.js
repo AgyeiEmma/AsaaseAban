@@ -9,6 +9,8 @@ app.use(cors()); // Enable CORS for all routes
 
 const userLandsRoute = require("./routes/userLands");
 const userRoutes = require("./routes/userRoutes"); // Import user routes
+const landSubmissionsRoute = require("./routes/landSubmissions"); // Import land submissions route
+const adminSubmissionsRoute = require("./routes/adminSubmissions"); // Import admin submissions route
 
 app.use(express.json());
 app.use(express.static("public")); // or your actual frontend folder
@@ -16,6 +18,8 @@ app.use(express.static("public")); // or your actual frontend folder
 // ✅ Now this works because app is already defined
 app.use("/api", userLandsRoute);
 app.use("/api", userRoutes); // Add user routes
+app.use("/api", landSubmissionsRoute); // Add land submissions route
+app.use("/api", adminSubmissionsRoute); // Add admin submissions route
 
 // ✅ Test DB Connection
 app.get("/api/test-db", async (req, res) => {
@@ -35,4 +39,6 @@ app.get("/api/test", (req, res) => {
 });
 
 const PORT = 8000;
-app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+app.listen(PORT, () =>
+  console.log(`🚀 Server running on http://localhost:${PORT}`)
+);
