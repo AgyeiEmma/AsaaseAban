@@ -80,6 +80,15 @@ CREATE TABLE IF NOT EXISTS public.land_submissions (
     reviewed_by TEXT
 );
 
+CREATE TABLE IF NOT EXISTS public.lands (
+    id SERIAL PRIMARY KEY,
+    location TEXT NOT NULL,
+    document_path TEXT,
+    owner_wallet TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP
+);
+
 ALTER TABLE IF EXISTS public.user_land
     ADD CONSTRAINT user_land_blockchain_id_fkey FOREIGN KEY (blockchain_id)
     REFERENCES public.users (blockchain_id) MATCH SIMPLE

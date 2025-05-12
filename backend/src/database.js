@@ -8,7 +8,6 @@ const pool = new Pool({
     port: process.env.DB_PORT, 
     database: process.env.DB_NAME,
 });
-  
-module.exports = {
-    query: (text, params) => pool.query(text, params)
-};
+
+// Export the entire pool object instead of just the query method
+module.exports = pool;
